@@ -1,4 +1,4 @@
-package main
+package day02
 
 import (
 	"fmt"
@@ -6,21 +6,34 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/spf13/cobra"
+
+	"github.com/danielmmetz/advent-of-code/errors"
 )
 
-func main() {
-	if errs := validate(); len(errs) != 0 {
-		fmt.Fprintln(os.Stderr, "failed the following test cases:")
-		for _, err := range errs {
-			fmt.Fprintln(os.Stderr, "\t", err)
-		}
-		os.Exit(1)
+var Cmd = cobra.Command{
+	Use:   "2",
+	Short: "day 2",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runE()
+	},
+}
+
+func init() {
+	Cmd.Flags().IntVar(&part, "part", 1, "part two")
+}
+
+var part int
+
+func runE() error {
+	if err := validate(); err != nil {
+		return err
 	}
 
 	bs, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "error reading from stdin: ", err)
-		os.Exit(1)
+		return fmt.Errorf("error reading from stdin: %v", err)
 	}
 
 	inputText := strings.TrimSpace(string(bs))
@@ -29,21 +42,51 @@ func main() {
 	for _, c := range rawValues {
 		i, err := strconv.Atoi(c)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "error constructing intcodeProgram: cannot convert to int: ", c)
-			os.Exit(1)
+			return fmt.Errorf("error constructing intcodeProgram: cannot convert to int: %s", c)
 		}
 		ints = append(ints, i)
 	}
 
+	switch part {
+	case 1:
+		return partOne(ints)
+	case 2:
+		return partTwo(ints)
+	default:
+		return fmt.Errorf("invalid part specified: %d", part)
+	}
+}
+
+func partOne(ints []int) error {
 	ints[1] = 12
 	ints[2] = 2
 	program := intcodeProgram(ints)
 	if err := program.run(); err != nil {
-		fmt.Fprintf(os.Stderr, "error while running intcode program: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error while running intcode program: %v", err)
 	}
 
 	fmt.Println(program[0])
+	return nil
+}
+
+func partTwo(ints []int) error {
+	const targetOutput = 19690720
+	for i := 0; i < 100; i++ {
+		for j := 0; j < 100; j++ {
+			dupe := make([]int, len(ints))
+			copy(dupe, ints)
+			dupe[1], dupe[2] = i, j
+			program := intcodeProgram(dupe)
+			if err := program.run(); err != nil {
+				return fmt.Errorf("error while running intcode program: %v", err)
+			}
+			if program[0] == targetOutput {
+				fmt.Println(100*i + j)
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("no noun-verb combo found")
 }
 
 type intcodeProgram []int
@@ -116,7 +159,7 @@ func (o operation) apply(p intcodeProgram) error {
 	return nil
 }
 
-func validate() []error {
+func validate() error {
 	cases := []struct {
 		input    intcodeProgram
 		expected intcodeProgram
@@ -127,17 +170,17 @@ func validate() []error {
 		{intcodeProgram([]int{1, 1, 1, 4, 99, 5, 6, 0, 99}), intcodeProgram([]int{30, 1, 1, 4, 2, 5, 6, 0, 99})},
 	}
 
-	var errors []error
+	var results errors.TestResults
 	for i, c := range cases {
 		err := c.input.run()
 		if err != nil {
-			errors = append(errors, fmt.Errorf("unexpected error in test case %d: %w", i, err))
+			results.AppendFailure(fmt.Sprintf("unexpected error in test case %d: %v", i, err))
 			continue
 		}
 		if !c.input.equal(c.expected) {
-			errors = append(errors, fmt.Errorf("expected test case %d to equal %v, got %v", i, c.expected, c.input))
+			results.AppendFailure(fmt.Sprintf("expected test case %d to equal %v, got %v", i, c.expected, c.input))
 		}
 	}
 
-	return errors
+	return results.Err()
 }

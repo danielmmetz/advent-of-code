@@ -1,4 +1,4 @@
-package main
+package day01
 
 import (
 	"bufio"
@@ -6,19 +6,32 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/spf13/cobra"
+
+	"github.com/danielmmetz/advent-of-code/errors"
 )
 
-func main() {
-	if errs := validate(); len(errs) != 0 {
-		fmt.Fprintf(os.Stderr, "failed the following test cases:\n")
-		for _, err := range errs {
-			fmt.Fprintf(os.Stderr, "\t%v\n", err)
-		}
-		os.Exit(1)
+var Cmd = cobra.Command{
+	Use:   "1",
+	Short: "day 1",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runE()
+	},
+}
+
+func init() {
+	Cmd.Flags().IntVar(&part, "part", 1, "part two")
+}
+
+var part int
+
+func runE() error {
+	if err := validate(); err != nil {
+		return err
 	}
 
-    holistic := flag.Bool("holisitic", false, "include accounting for fuel usage")
-    flag.Parse()
+	flag.Parse()
 
 	var total int
 	scanner := bufio.NewScanner(os.Stdin)
@@ -26,17 +39,24 @@ func main() {
 		input := scanner.Text()
 		mass, err := strconv.Atoi(input)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "expected int, got %s\n", err)
+			return fmt.Errorf("expected int, got %s", err)
 		}
-		total += FuelRequired(*holistic, mass)
+		switch part {
+		case 1:
+			total += FuelRequired(false, mass)
+		case 2:
+			total += FuelRequired(true, mass)
+		default:
+			return fmt.Errorf("invalid part specified: %d", part)
+		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 
 	fmt.Println(total)
+	return nil
 }
 
 func FuelRequired(holisitc bool, mass int) int {
@@ -62,7 +82,7 @@ func holisticFuelRequired(mass int) int {
 	}
 }
 
-func validate() []error {
+func validate() error {
 	cases := []struct {
 		holisitc       bool
 		mass, expected int
@@ -76,13 +96,13 @@ func validate() []error {
 		{true, 100756, 50346},
 	}
 
-	var errors []error
+	var results errors.TestResults
 	for _, c := range cases {
 		actual := FuelRequired(c.holisitc, c.mass)
 		if actual != c.expected {
-			errors = append(errors, fmt.Errorf("expected FuelRequired(%t, %d) == %d, got %d", c.holisitc, c.mass, c.expected, actual))
+			results.AppendFailure(fmt.Sprintf("expected FuelRequired(%t, %d) == %d, got %d", c.holisitc, c.mass, c.expected, actual))
 		}
 	}
 
-	return errors
+	return results.Err()
 }
