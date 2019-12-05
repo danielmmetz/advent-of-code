@@ -51,18 +51,18 @@ func runE() error {
 		return fmt.Errorf("expected 2 paths, got %d", len(paths))
 	}
 
-    var answer int
+	var answer int
 
 	switch part {
 	case 1:
-        answer = distanceOfClosestIntersectionByManhattan(paths[0], paths[1])
+		answer = distanceOfClosestIntersectionByManhattan(paths[0], paths[1])
 	case 2:
-        answer = distanceOfClosestIntersectionByDelay(paths[0], paths[1])
+		answer = distanceOfClosestIntersectionByDelay(paths[0], paths[1])
 	default:
 		return fmt.Errorf("invalid part specified: %d", part)
 	}
 
-    fmt.Println(answer)
+	fmt.Println(answer)
 	return nil
 }
 
@@ -73,11 +73,11 @@ type point struct {
 type points []point
 
 func (p points) Map() map[point]bool {
-    m := make(map[point]bool)
-    for _, p := range p {
-        m[p] = true;
-    }
-    return m
+	m := make(map[point]bool)
+	for _, p := range p {
+		m[p] = true
+	}
+	return m
 }
 
 // pointsEncountered returns a temporally-sorted list of integral-valued points
@@ -166,7 +166,7 @@ func newPath(input string) (path, error) {
 }
 
 func collectPointsAlong(p path) points {
-    points := []point{}
+	points := []point{}
 
 	var current point
 	for _, step := range p {
@@ -195,34 +195,34 @@ func intersection(a, b map[point]bool) points {
 }
 
 func delayToFirstIntersection(a, b points) int {
-    intersections := intersection(a.Map(), b.Map())
+	intersections := intersection(a.Map(), b.Map())
 
-    path1Delay := make([]int, 0, len(intersections))
-    path2Delay := make([]int, 0, len(intersections))
+	path1Delay := make([]int, 0, len(intersections))
+	path2Delay := make([]int, 0, len(intersections))
 
-    for _, p := range intersections {
-        for i, p1 := range a {
-            if p == p1 {
-                path1Delay = append(path1Delay, i+1)
-                break
-            }
-        }
-        for i, p2 := range b {
-            if p == p2 {
-                path2Delay = append(path2Delay, i+1)
-                break
-            }
-        }
-    }
+	for _, p := range intersections {
+		for i, p1 := range a {
+			if p == p1 {
+				path1Delay = append(path1Delay, i+1)
+				break
+			}
+		}
+		for i, p2 := range b {
+			if p == p2 {
+				path2Delay = append(path2Delay, i+1)
+				break
+			}
+		}
+	}
 
-    minCombo := -1
-    for i := range(intersections) {
-        delay := path1Delay[i] + path2Delay[i]
-        if minCombo < 0 || delay < minCombo {
-            minCombo = delay
-        }
-    }
-    return minCombo
+	minCombo := -1
+	for i := range intersections {
+		delay := path1Delay[i] + path2Delay[i]
+		if minCombo < 0 || delay < minCombo {
+			minCombo = delay
+		}
+	}
+	return minCombo
 }
 
 func closestToOrigin(candidates points) point {
@@ -253,52 +253,52 @@ func distanceOfClosestIntersectionByManhattan(p1, p2 path) int {
 func distanceOfClosestIntersectionByDelay(p1, p2 path) int {
 	p1points := collectPointsAlong(p1)
 	p2points := collectPointsAlong(p2)
-    return delayToFirstIntersection(p1points, p2points)
+	return delayToFirstIntersection(p1points, p2points)
 }
 
 func validate() error {
 	cases := []struct {
-		path1    string
-		path2    string
-        distanceFunc func(p1, p2 path) int
-		expected int
+		path1        string
+		path2        string
+		distanceFunc func(p1, p2 path) int
+		expected     int
 	}{
 		{
-            "R8,U5,L5,D3",
-            "U7,R6,D4,L4",
-            distanceOfClosestIntersectionByManhattan,
-            6,
-        },
+			"R8,U5,L5,D3",
+			"U7,R6,D4,L4",
+			distanceOfClosestIntersectionByManhattan,
+			6,
+		},
 		{
-            "R75,D30,R83,U83,L12,D49,R71,U7,L72",
-            "U62,R66,U55,R34,D71,R55,D58,R83",
-            distanceOfClosestIntersectionByManhattan,
-            159,
-        },
+			"R75,D30,R83,U83,L12,D49,R71,U7,L72",
+			"U62,R66,U55,R34,D71,R55,D58,R83",
+			distanceOfClosestIntersectionByManhattan,
+			159,
+		},
 		{
-            "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51",
-            "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7",
-            distanceOfClosestIntersectionByManhattan,
-            135,
-        },
+			"R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51",
+			"U98,R91,D20,R16,D67,R40,U7,R15,U6,R7",
+			distanceOfClosestIntersectionByManhattan,
+			135,
+		},
 		{
-            "R8,U5,L5,D3",
-            "U7,R6,D4,L4",
-            distanceOfClosestIntersectionByDelay,
-            30,
-        },
+			"R8,U5,L5,D3",
+			"U7,R6,D4,L4",
+			distanceOfClosestIntersectionByDelay,
+			30,
+		},
 		{
-            "R75,D30,R83,U83,L12,D49,R71,U7,L72",
-            "U62,R66,U55,R34,D71,R55,D58,R83",
-            distanceOfClosestIntersectionByDelay,
-            610,
-        },
+			"R75,D30,R83,U83,L12,D49,R71,U7,L72",
+			"U62,R66,U55,R34,D71,R55,D58,R83",
+			distanceOfClosestIntersectionByDelay,
+			610,
+		},
 		{
-            "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51",
-            "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7",
-            distanceOfClosestIntersectionByDelay,
-            410,
-        },
+			"R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51",
+			"U98,R91,D20,R16,D67,R40,U7,R15,U6,R7",
+			distanceOfClosestIntersectionByDelay,
+			410,
+		},
 	}
 
 	var results errors.TestResults
