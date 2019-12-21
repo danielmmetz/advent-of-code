@@ -9,6 +9,7 @@ import (
 	"github.com/danielmmetz/advent-of-code/day01"
 	"github.com/danielmmetz/advent-of-code/day02"
 	"github.com/danielmmetz/advent-of-code/day03"
+	"github.com/danielmmetz/advent-of-code/day04"
 )
 
 var cmd = cobra.Command{
@@ -22,6 +23,7 @@ func init() {
 	cmd.AddCommand(&day01.Cmd)
 	cmd.AddCommand(&day02.Cmd)
 	cmd.AddCommand(&day03.Cmd)
+	cmd.AddCommand(&day04.Cmd)
 }
 
 func main() {
